@@ -23,9 +23,9 @@ def yolo_to_xml_bbox(bbox, w, h):
 
 
 classes = []
-input_dir = "annotations/"
-output_dir = "labels/"
-image_dir = "images/"
+input_dir = "pascal_to_yolo/annotations/"
+output_dir = "pascal_to_yolo/labels/"
+image_dir = "pascal_to_yolo/images/"
 
 # create the labels folder (output directory)
 os.mkdir(output_dir)
@@ -39,37 +39,37 @@ for fil in files:
     filename = os.path.splitext(basename)[0]
 
     # check if the label contains the corresponding image file
-    if not os.path.exists(os.path.join(image_dir, f"{filename}.jpg")):
+    if not os.path.exists(os.path.join(image_dir, f"{filename}.png")):
         print(f"{filename} image does not exist!")
-        #continue
+        continue
 
-result = []
+    result = []
 
-# parse the content of the xml file
-tree = ET.parse(fil)
-root = tree.getroot()
-width = int(root.find("size").find("width").text)
-height = int(root.find("size").find("height").text)
+    # parse the content of the xml file
+    tree = ET.parse(fil)
+    root = tree.getroot()
+    width = int(root.find("size").find("width").text)
+    height = int(root.find("size").find("height").text)
 
-for obj in root.findall('object'):
-    label = obj.find("name").text
+    for obj in root.findall('object'):
+        label = obj.find("name").text
 
-# check for new classes and append to list
-if label not in classes:
-    classes.append(label)
+    # check for new classes and append to list
+    if label not in classes:
+        classes.append(label)
 
-index = classes.index(label)
-pil_bbox = [int(x.text) for x in obj.find("bndbox")]
-yolo_bbox = xml_to_yolo_bbox(pil_bbox, width, height)
+    index = classes.index(label)
+    pil_bbox = [int(x.text) for x in obj.find("bndbox")]
+    yolo_bbox = xml_to_yolo_bbox(pil_bbox, width, height)
 
-# convert data to string
-bbox_string = " ".join([str(x) for x in yolo_bbox])
-result.append(f"{index} {bbox_string}")
+    # convert data to string
+    bbox_string = " ".join([str(x) for x in yolo_bbox])
+    result.append(f"{index} {bbox_string}")
 
-if result:
-    # generate a YOLO format text file for each xml file
-    with open(os.path.join(output_dir, f"{filename}.txt"), "w", encoding="utf-8") as f:
-        f.write("\n".join(result))
-        # generate the classes file as reference
-    with open('classes.txt', 'w', encoding='utf8') as f:
-        f.write(json.dumps(classes))
+    if result:
+        # generate a YOLO format text file for each xml file
+        with open(os.path.join(output_dir, f"{filename}.txt"), "w", encoding="utf-8") as f:
+            f.write("\n".join(result))
+            # generate the classes file as reference
+        with open('classes.txt', 'w', encoding='utf8') as f:
+            f.write(json.dumps(classes))
